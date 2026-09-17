@@ -43,14 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!user && !!token;
 
-  // Debug logging for state changes
-  console.log('AuthContext render - state:', { 
-    hasUser: !!user, 
-    hasToken: !!token, 
-    isLoading, 
-    isAuthenticated 
-  });
-
   // Initialize auth state on mount
   useEffect(() => {
     initializeAuth();
@@ -59,8 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Listen for unauthorized events from API client
   useEffect(() => {
     const handleUnauthorized = () => {
-      console.log('AuthContext - unauthorized event received');
-      // When user is unauthorized (e.g., token expired), preserve current URL for redirect
       clearAuthData();
       
       // Optional: Call logout endpoint to invalidate token on server
@@ -72,19 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         const currentUrl = window.location.pathname + window.location.search;
         if (currentUrl !== '/login') {
-          console.log('AuthContext - redirecting to login with next:', currentUrl);
           window.location.href = `/login?next=${encodeURIComponent(currentUrl)}`;
         } else {
-          console.log('AuthContext - redirecting to login without next');
           window.location.href = '/login';
         }
       }
     };
 
-    console.log('AuthContext - setting up unauthorized event listener');
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => {
-      console.log('AuthContext - cleaning up unauthorized event listener');
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
     };
   }, []); // Remove token dependency to prevent re-renders
@@ -135,7 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Set new timer
       inactivityTimerRef.current = setTimeout(() => {
-        console.log('AuthContext - Inactivity timeout reached, logging out user');
         if (logoutRef.current) {
           logoutRef.current(true); // Preserve current URL for redirect
         }
@@ -177,16 +162,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated]); // Only run when authentication state changes
 
   const initializeAuth = async () => {
-    console.log('AuthContext - initializeAuth called');
     const storedToken = localStorage.getItem(TOKEN_KEY);
-    console.log('AuthContext - storedToken found:', !!storedToken);
-    
+
     if (storedToken) {
       try {
-        console.log('AuthContext - verifying token with backend');
-        // Verify token with backend and get user profile
         const userProfile = await authAPI.getProfile(storedToken);
-        console.log('AuthContext - token verified, setting user and token');
         setUser(userProfile);
         setToken(storedToken);
       } catch (error) {
@@ -195,7 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    console.log('AuthContext - setting loading to false');
     setIsLoading(false);
   };
 
@@ -324,7 +303,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearAuthData = () => {
-    console.log('AuthContext - clearAuthData called');
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     setToken(null);

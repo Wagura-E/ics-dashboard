@@ -626,34 +626,13 @@ export function FormProvider({ children }: FormProviderProps) {
         return null;
       }
 
-      console.log('🔄 FormContext: Starting duplicate form for project:', projectId, 'formId:', formId);
       const form = await formsApi.duplicateForm(projectId, formId);
-      console.log('📥 FormContext: Received duplicated form from API:', JSON.stringify(form, null, 2));
-      
-      // Log questions and their options
-      if (form.sections) {
-        form.sections.forEach((section, sectionIndex) => {
-          console.log(`📋 FormContext: Section ${sectionIndex} (${section.title}):`, section.questions?.length || 0, 'questions');
-          section.questions?.forEach((question, questionIndex) => {
-            if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTIPLE_CHOICE') {
-              console.log(`🎯 FormContext: Question ${questionIndex} (${question.title}):`, {
-                type: question.type,
-                optionsCount: question.options?.length || 0,
-                options: question.options?.map(opt => ({ id: opt.id, label: opt.label, value: opt.value })) || []
-              });
-            }
-          });
-        });
-      }
-      
-      // Update local cache
+
       setProjectForms(prev => ({
         ...prev,
         [projectId]: [...(prev[projectId] || []), form]
       }));
-      
-      console.log('✅ FormContext: Updated local cache with duplicated form');
-      
+
       toast({
         title: "Success",
         description: "Form duplicated successfully",

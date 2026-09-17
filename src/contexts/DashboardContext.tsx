@@ -27,12 +27,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       const pathMatch = location.pathname.match(/\/dashboard\/projects\/([^\/]+)/);
       if (pathMatch) {
         const projectIdFromUrl = pathMatch[1];
-        console.log('Project ID from URL:', projectIdFromUrl);
-        
+
         try {
-          // Load the project data from API
           const projectData = await projectsApi.getProjectById(projectIdFromUrl);
-          console.log('Loaded project data:', projectData);
           setCurrentProject(projectData);
         } catch (error) {
           console.error('Error loading project:', error);

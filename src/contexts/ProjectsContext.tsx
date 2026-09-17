@@ -52,20 +52,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     isLoading: authLoading
   });
 
-  // Debug user state
-  useEffect(() => {
-    console.log(`👤 ProjectsContext user state: authenticated=${isAuthenticated}, loading=${authLoading}, user=${user ? 'present' : 'null'}`);
-    if (user) {
-      console.log(`👤 User roles:`, user.roles?.map(r => `${r.roleName}(level:${r.level})`).join(', ') || 'none');
-      console.log(`👤 Is global admin:`, permissionManager.isGlobalAdmin());
-    }
-  }, [user, isAuthenticated, authLoading, permissionManager]);
-
-  // Load projects from API
   const loadProjects = useCallback(async () => {
-    // Don't make API calls if not authenticated
     if (!isAuthenticated) {
-      console.log('ProjectsContext - loadProjects called but user not authenticated, skipping');
       setIsLoading(false);
       return;
     }
@@ -73,7 +61,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('ProjectsContext - making API call to getAllProjects');
       const projectsData = await projectsApi.getAllProjects();
       
       // Convert date strings back to Date objects
@@ -97,10 +84,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   // Initialize projects from API - only when authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      console.log('ProjectsContext - loading projects (user is authenticated)');
       loadProjects();
     } else {
-      console.log('ProjectsContext - skipping project load (not authenticated or still loading)');
       setIsLoading(false);
     }
   }, [loadProjects, isAuthenticated, authLoading]);
@@ -248,9 +233,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   // Permission and access control functions
   const canAccessProject = (projectId: string): boolean => {
-    const hasAccess = permissionManager.canAccessProject(projectId, 'read');
-    console.log(`🔐 Access check for project ${projectId}: ${hasAccess ? 'GRANTED' : 'DENIED'}`);
-    return hasAccess;
+    return permissionManager.canAccessProject(projectId, 'read');
   };
 
   const getAccessibleProjectIds = (): string[] => {
@@ -276,10 +259,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     if (!canAccessProject(projectId)) return [];
     
     try {
-      console.log(`🔄 Fetching outcomes for project ${projectId} (refresh trigger: ${dataRefreshTrigger})`);
-      const result = await projectDataApi.getProjectOutcomes(projectId);
-      console.log(`✅ Fetched ${result.length} outcomes for project ${projectId}`);
-      return result;
+      return await projectDataApi.getProjectOutcomes(projectId);
     } catch (error) {
       console.error('Error fetching project outcomes:', error);
       return [];
@@ -290,10 +270,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     if (!canAccessProject(projectId)) return [];
     
     try {
-      console.log(`🔄 Fetching activities for project ${projectId} (refresh trigger: ${dataRefreshTrigger})`);
-      const result = await projectDataApi.getProjectActivities(projectId);
-      console.log(`✅ Fetched ${result.length} activities for project ${projectId}`);
-      return result;
+      return await projectDataApi.getProjectActivities(projectId);
     } catch (error) {
       console.error('Error fetching project activities:', error);
       return [];
@@ -315,10 +292,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     if (!canAccessProject(projectId)) return [];
     
     try {
-      console.log(`🔄 Fetching sub-activities for project ${projectId} (refresh trigger: ${dataRefreshTrigger})`);
-      const result = await projectDataApi.getProjectSubActivities(projectId);
-      console.log(`✅ Fetched ${result.length} sub-activities for project ${projectId}`);
-      return result;
+      return await projectDataApi.getProjectSubActivities(projectId);
     } catch (error) {
       console.error('Error fetching project sub-activities:', error);
       return [];
@@ -329,10 +303,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     if (!canAccessProject(projectId)) return [];
     
     try {
-      console.log(`🔄 Fetching KPIs for project ${projectId} (refresh trigger: ${dataRefreshTrigger})`);
-      const result = await projectDataApi.getProjectKPIs(projectId);
-      console.log(`✅ Fetched ${result.length} KPIs for project ${projectId}`);
-      return result;
+      return await projectDataApi.getProjectKPIs(projectId);
     } catch (error) {
       console.error('Error fetching project KPIs:', error);
       return [];
@@ -352,9 +323,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
   // Trigger data refresh for UI components
   const triggerDataRefresh = () => {
-    const newTrigger = dataRefreshTrigger + 1;
-    console.log(`🔄 Triggering data refresh for all project components: ${dataRefreshTrigger} -> ${newTrigger}`);
-    setDataRefreshTrigger(newTrigger);
+    setDataRefreshTrigger(dataRefreshTrigger + 1);
   };
 
   const value: ProjectsContextType = {
