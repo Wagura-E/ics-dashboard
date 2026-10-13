@@ -1166,10 +1166,9 @@ function ResponseCell({ question, value: rawValue, attachments, isEditable = fal
       return <div className="text-xs text-gray-400 leading-tight">No files or links</div>;
 
     default:
-      // Avoid "[object Object]" when value is an object (e.g. nested or unknown type from backend)
       const displayValue = value !== undefined && value !== null
         ? (typeof value === 'object' && value !== null && !Array.isArray(value)
-            ? JSON.stringify(value)
+            ? (Object.keys(value).length === 0 ? '-' : JSON.stringify(value))
             : String(value))
         : '-';
       return (
@@ -1703,9 +1702,13 @@ export function FormResponseViewer() {
     // Helper function to escape CSV values
     const escapeCsvValue = (value: any): string => {
       if (value === null || value === undefined) return '';
-      
+      if (typeof value === 'object') {
+        if (Array.isArray(value)) return value.join('; ');
+        if (Object.keys(value).length === 0) return '';
+        return JSON.stringify(value);
+      }
+
       const stringValue = String(value);
-      // If value contains comma, newline, or quote, wrap in quotes and escape quotes
       if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
         return `"${stringValue.replace(/"/g, '""')}"`;
       }
@@ -1728,7 +1731,17 @@ export function FormResponseViewer() {
       // Helper function to format question value for CSV
       const formatQuestionValue = (value: any, question: any): string => {
         if (value === undefined || value === null) return '';
-        
+
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          if (Object.keys(value).length === 0) return '';
+          if (question.type === 'LOCATION') {
+            const lat = value.latitude ?? value.lat ?? '';
+            const lng = value.longitude ?? value.lng ?? '';
+            return `${lat}, ${lng}`;
+          }
+          return JSON.stringify(value);
+        }
+
         if (Array.isArray(value)) {
           return value.join('; ');
         } else if (question.type === 'SINGLE_CHOICE' && question.options) {
@@ -1744,17 +1757,7 @@ export function FormResponseViewer() {
         } else if (question.type === 'DATE' || question.type === 'DATETIME') {
           return formatDate(value);
         } else if (question.type === 'LOCATION') {
-          if (typeof value === 'object' && value !== null) {
-            const lat = value.latitude ?? value.lat ?? '';
-            const lng = value.longitude ?? value.lng ?? '';
-            return `${lat}, ${lng}`;
-          }
           return String(value);
-        }
-        // Avoid "[object Object]" for unexpected object values from backend
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          if (Object.keys(value).length === 0) return '';
-          return JSON.stringify(value);
         }
         return String(value);
     };

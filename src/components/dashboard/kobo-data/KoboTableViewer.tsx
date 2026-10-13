@@ -66,7 +66,10 @@ export function KoboTableViewer({ projectId, tableId, tableName, displayName }: 
 
   const formatCellValue = (value: any) => {
     if (value === null || value === undefined) return '-';
-    if (typeof value === 'object') return JSON.stringify(value);
+    if (typeof value === 'object') {
+      if (!Array.isArray(value) && Object.keys(value).length === 0) return '-';
+      return JSON.stringify(value);
+    }
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     return String(value);
   };
