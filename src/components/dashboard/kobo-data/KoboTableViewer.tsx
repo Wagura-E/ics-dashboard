@@ -126,15 +126,18 @@ export function KoboTableViewer({ projectId, tableId, tableName, displayName }: 
             const value = row[header];
             // Format the value for CSV
             if (value === null || value === undefined) return '';
-            if (typeof value === 'object') return JSON.stringify(value);
+            if (typeof value === 'object') {
+              if (Object.keys(value).length === 0) return '';
+              return JSON.stringify(value);
+            }
             if (typeof value === 'boolean') return value ? 'Yes' : 'No';
             return String(value);
           }).map(escapeCsvValue).join(',');
         })
       ].join('\n');
 
-      // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Download CSV — prepend UTF-8 BOM so Excel interprets special characters correctly
+      const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -1753,6 +1753,7 @@ export function FormResponseViewer() {
         }
         // Avoid "[object Object]" for unexpected object values from backend
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          if (Object.keys(value).length === 0) return '';
           return JSON.stringify(value);
         }
         return String(value);
@@ -1940,8 +1941,8 @@ export function FormResponseViewer() {
       })
     ].join('\n');
 
-    // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Download CSV — prepend UTF-8 BOM so Excel interprets special characters correctly
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
